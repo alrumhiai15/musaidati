@@ -381,23 +381,37 @@
         }
 
         // 3. طلب إذن الإشعارات من المتصفح
-        function requestNotificationPermission() {
-            if (!("Notification" in window)) {
-                alert("متصفحك الحالي لا يدعم الإشعارات المباشرة.");
-                return;
-            }
+function requestNotificationPermission() {
+  // 1. التعرّف على ما إذا كان الزائر يتصفح من داخل تطبيق أندرويد (WebView)
+  const isWebView = /wv|Android.*Version\/[0-9]\.[0-9]/i.test(navigator.userAgent) || window.Android;
 
-            Notification.requestPermission().then(permission => {
-                const btnText = document.getElementById('notify-status-text');
-                if (permission === "granted") {
-                    if (btnText) btnText.innerText = "مُفعلة 🔔";
-                    triggerSoundAndVibration("تم تفعيل الإشعارات بنجاح! 🎉", "ستصلكِ التنبيهات الصوتية فور حلول مواعيد الواجبات والاختبارات.");
-                } else if (permission === "denied") {
-                    if (btnText) btnText.innerText = "محظورة ❌";
-                    alert("لقد قمتِ برفض الإشعارات، يمكنكِ تفعيلها من إعدادات المتصفح.");
-                }
-            });
-        }
+  // 2. إذا كان الاستخدام من داخل التطبيق
+  if (isWebView) {
+    const statusText = document.getElementById("notify-status-text");
+    if (statusText) {
+      statusText.innerText = "التنبيهات مفعلة";
+    }
+    alert("التنبيهات مفعلة بالفعل داخل التطبيق! يمكنك التحكم بها من إعدادات الهاتف.");
+    return;
+  }
+
+  // 3. إذا كان الاستخدام من متصفح عادي (Chrome, Safari, etc.)
+  if (!('Notification' in window)) {
+    alert("متصفحك الحالي لا يدعم الإشعارات المباشرة.");
+    return;
+  }
+
+  // طلب الإذن للمتصفحات العادية
+  Notification.requestPermission().then((permission) => {
+    const statusText = document.getElementById("notify-status-text");
+    if (permission === 'granted') {
+      if (statusText) statusText.innerText = "التنبيهات مفعلة";
+      alert("تم تفعيل التنبيهات بنجاح!");
+    } else {
+      alert("تم رفض إذن الإشعارات.");
+    }
+  });
+}
 
         // 4. إرسال إشعار متكامل (صوت + اهتزاز + إشعار نصوص)
         function triggerSoundAndVibration(title, bodyText) {

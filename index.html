@@ -67,10 +67,16 @@
                     <p class="text-xs text-purple-200">معاً .. نحو مستقبل أكثر إشراقاً</p>
                 </div>
             </div>
-            <button onclick="toggleAiModal()" class="bg-white/20 hover:bg-white/30 text-white p-2 rounded-full flex items-center space-x-1 space-x-reverse px-3 border border-white/30 text-xs transition">
-                <i class="fa-solid fa-robot text-yellow-300"></i>
-                <span>مساعدتي الذكي</span>
-            </button>
+            <div class="flex items-center space-x-2 space-x-reverse">
+                <!-- زر تفعيل الإشعارات -->
+                <button onclick="requestNotificationPermission()" id="btn-enable-notify" class="bg-yellow-400 text-purple-900 p-2 rounded-full flex items-center justify-center shadow-md hover:bg-yellow-300 transition text-xs font-bold px-2.5">
+                    <i class="fa-solid fa-bell animate-bounce ml-1"></i>
+                    <span id="notify-status-text">تفعيل التنبيهات</span>
+                </button>
+                <button onclick="toggleAiModal()" class="bg-white/20 hover:bg-white/30 text-white p-2 rounded-full flex items-center space-x-1 space-x-reverse px-2.5 border border-white/30 text-xs transition">
+                    <i class="fa-solid fa-robot text-yellow-300"></i>
+                </button>
+            </div>
         </header>
 
         <!-- المحتوى المتغير للواجهات -->
@@ -155,12 +161,12 @@
                 </div>
             </section>
 
-            <!-- 3️⃣ نافذة منظم الطالبات (Offline LocalStorage) -->
+            <!-- 3️⃣ نافذة منظم الطالبات (المهمات والإشعارات) -->
             <section id="sec-organizer" class="space-y-4 hidden">
                 <div class="bg-gradient-to-r from-app-blue to-blue-500 text-white p-4 rounded-2xl shadow-sm flex items-center justify-between">
                     <div>
                         <h2 class="text-xl font-bold mb-1"><i class="fa-solid fa-calendar-check ml-2"></i>جدولي المنظم</h2>
-                        <p class="text-xs text-blue-100">محفوظ محلياً على هاتفكِ بدون إنترنت</p>
+                        <p class="text-xs text-blue-100">تنظيم الواجبات والاختبارات مع إشعارات صوتية</p>
                     </div>
                     <button onclick="openAddTaskModal()" class="bg-white text-blue-600 w-10 h-10 rounded-full font-bold text-xl shadow hover:bg-blue-50 flex items-center justify-center">+</button>
                 </div>
@@ -170,6 +176,12 @@
                     <button onclick="filterTasks('واجبات')" class="flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-gray-400 task-tab" id="tab-hw">الواجبات</button>
                     <button onclick="filterTasks('اختبارات')" class="flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-gray-400 task-tab" id="tab-exam">الاختبارات</button>
                     <button onclick="filterTasks('مهام')" class="flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-gray-400 task-tab" id="tab-task">المهام</button>
+                </div>
+
+                <!-- زر تجربة الصوت والاهتزاز -->
+                <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 flex items-center justify-between">
+                    <span class="text-xs font-semibold text-blue-900"><i class="fa-solid fa-volume-high text-blue-600 ml-1"></i>تجربة التنبيه الصوتي والاهتزاز:</span>
+                    <button onclick="triggerSoundAndVibration('اختبار تجريبي', 'هذا تنبيه تجريبي لتأكيد عمل الصوت والاهتزاز!')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow hover:bg-blue-700">تجربة الآن 🔔</button>
                 </div>
 
                 <div id="tasks-container" class="space-y-2"></div>
@@ -252,7 +264,7 @@
             <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-xl">
                 <h3 class="font-bold text-base text-gray-800">إضافة مهمة جديدة</h3>
                 <div>
-                    <label class="text-xs font-semibold text-gray-600">عنوان المهمة</label>
+                    <label class="text-xs font-semibold text-gray-600">عنوان المهمة / الواجب / الاختبار</label>
                     <input type="text" id="new-task-title" placeholder="مثال: اختبار رياضيات..." class="w-full mt-1 p-2.5 border rounded-xl text-xs focus:ring-2 focus:ring-app-blue">
                 </div>
                 <div>
@@ -329,14 +341,110 @@
 
     </div>
 
-    <!-- JavaScript Engine with LIVE AI Integration -->
+    <!-- JavaScript Engine with Live Notifications, Audio Synth & Vibration -->
     <script>
-        // دالة الاتصال المباشر بمحرك الذكاء الاصطناعي الحقيقي عبر الإنترنت
+        // --- 🔔 محرك الإشعارات والصوت والاهتزاز --- //
+        
+        // 1. توليد نغمة صوتية جودة عالية بدون الحاجة لملفات خارجية
+        function playNotificationSound() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                const ctx = new AudioContext();
+                
+                // النغمة الأولى
+                const osc1 = ctx.createOscillator();
+                const gain1 = ctx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+                osc1.frequency.setValueAtTime(659.25, ctx.currentTime + 0.15); // E5
+                osc1.frequency.setValueAtTime(783.99, ctx.currentTime + 0.3); // G5
+                
+                gain1.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain1.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
+                
+                osc1.connect(gain1);
+                gain1.connect(ctx.destination);
+                
+                osc1.start();
+                osc1.stop(ctx.currentTime + 0.6);
+            } catch(e) {
+                console.log("الصوت محجوب أو غير مدعوم:", e);
+            }
+        }
+
+        // 2. مشغل الاهتزاز للهاتف
+        function triggerVibration() {
+            if ("vibrate" in navigator) {
+                navigator.vibrate([200, 100, 200, 100, 300]);
+            }
+        }
+
+        // 3. طلب إذن الإشعارات من المتصفح
+        function requestNotificationPermission() {
+            if (!("Notification" in window)) {
+                alert("متصفحك الحالي لا يدعم الإشعارات المباشرة.");
+                return;
+            }
+
+            Notification.requestPermission().then(permission => {
+                const btnText = document.getElementById('notify-status-text');
+                if (permission === "granted") {
+                    if (btnText) btnText.innerText = "مُفعلة 🔔";
+                    triggerSoundAndVibration("تم تفعيل الإشعارات بنجاح! 🎉", "ستصلكِ التنبيهات الصوتية فور حلول مواعيد الواجبات والاختبارات.");
+                } else if (permission === "denied") {
+                    if (btnText) btnText.innerText = "محظورة ❌";
+                    alert("لقد قمتِ برفض الإشعارات، يمكنكِ تفعيلها من إعدادات المتصفح.");
+                }
+            });
+        }
+
+        // 4. إرسال إشعار متكامل (صوت + اهتزاز + إشعار نصوص)
+        function triggerSoundAndVibration(title, bodyText) {
+            // تشغيل الصوت
+            playNotificationSound();
+            // تفعيل الاهتزاز
+            triggerVibration();
+
+            // إرسال إشعار النظام
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(title, {
+                    body: bodyText,
+                    icon: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+                    vibrate: [200, 100, 200]
+                });
+            } else {
+                alert(`🔔 ${title}\n\n${bodyText}`);
+            }
+        }
+
+        // 5. محرك فحص المواعيد والتواريخ اليومية
+        function checkTaskDeadlines() {
+            const todayStr = new Date().toISOString().split('T')[0];
+            let tasksList = JSON.parse(localStorage.getItem('musaidati_tasks') || '[]');
+            let notifiedTasks = JSON.parse(localStorage.getItem('musaidati_notified_tasks') || '{}');
+
+            tasksList.forEach(t => {
+                if (t.date === todayStr && !t.done && !notifiedTasks[t.title + t.date]) {
+                    // إرسال التنبيه فوراً عند مطابقة تاريخ اليوم ولم يتم التنبيه عنه سابقاً
+                    triggerSoundAndVibration(
+                        `تذكير بـ (${t.type}): ${t.title}`,
+                        `عزيزتي الطالبة، اليوم هو موعد تسليم / اختبار ${t.title}. بالتوفيق والنجاح! ✨`
+                    );
+                    // تسجيل أنه تم إرسال الإشعار لعدم تكراره في نفس اليوم
+                    notifiedTasks[t.title + t.date] = true;
+                }
+            });
+
+            localStorage.setItem('musaidati_notified_tasks', JSON.stringify(notifiedTasks));
+        }
+
+
+        // --- 🤖 محرك الذكاء الاصطناعي المباشر --- //
         async function queryRealAI(promptText, systemContext = "") {
             try {
                 const fullPrompt = systemContext ? `${systemContext}\n\nطلب الطالبة: ${promptText}` : promptText;
                 
-                // استخدام سيرفر ذكاء اصطناعي حقيقي ومباشر مجاني ومتصل دائماً
                 const response = await fetch("https://text.pollinations.ai/", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
@@ -358,15 +466,26 @@
             }
         }
 
-        // إخفاء شاشة الإقلاع
+        // إخفاء شاشة الإقلاع وفحص الإشعارات عند التحميل
         window.addEventListener('load', () => {
             setTimeout(() => {
                 const splash = document.getElementById('splash-screen');
                 splash.classList.add('opacity-0');
                 setTimeout(() => splash.style.display = 'none', 700);
             }, 1500);
+
+            // تحديث حالة زر الإشعارات
+            if ("Notification" in window && Notification.permission === "granted") {
+                const btnText = document.getElementById('notify-status-text');
+                if(btnText) btnText.innerText = "مُفعلة 🔔";
+            }
+
             renderTasks();
             renderDiaries();
+            checkTaskDeadlines();
+
+            // فحص المهام تلقائياً كل 5 دقائق
+            setInterval(checkTaskDeadlines, 300000);
         });
 
         // التنقل بين الأقسام
@@ -380,7 +499,7 @@
             document.getElementById(`nav-${tab}`).className = 'flex flex-col items-center text-app-purple';
         }
 
-        // --- 1. مساعد الدراسة (Live AI) ---
+        // --- 1. مساعد الدراسة ---
         async function fetchStudyContent(type) {
             const query = document.getElementById('study-query').value.trim();
             if(!query) { alert('الرجاء كتابة عنوان الدرس أولاً'); return; }
@@ -412,7 +531,7 @@
             <a href="https://www.google.com/search?q=${encodeURIComponent(query)}" target="_blank" class="block text-blue-600 hover:underline">🔍 البحث عن المادة على Google</a>`;
         }
 
-        // --- 2. حل الواجب (Live AI Solver) ---
+        // --- 2. حل الواجب ---
         async function solveHomework() {
             const query = document.getElementById('hw-query').value.trim();
             if(!query) { alert('يرجى كتابة السؤال أو المسألة أولاً'); return; }
@@ -421,7 +540,7 @@
             document.getElementById('hw-loading').classList.remove('hidden');
 
             const prompt = `أنت خبير مدرسي. قم بحل هذه المسألة أو الواجب بكل دقة: "${query}". 
-يجب عليك حتماً تقسيم الإجابة إلى 4 أجزاء فقط وفصل كل جزء بالرمز [SPLIT] بالضبط بالترتيب التالي:
+يجب عليك حتماً تقسيم الإجابة إلى 4 أجزاء فقط وفصل كل جزء بالرمز [SPLIT] بالترتيب التالي:
 1. فهم السؤال والفكره العامة
 2. المعطيات والمطلوب
 3. تطبيق القانون أو الخطوات الحسابية/المنطقية للحل
@@ -439,7 +558,6 @@
                 document.getElementById('hw-step-3').innerText = parts[2].replace(/3\./g, '').trim();
                 document.getElementById('hw-step-4').innerText = parts[3].replace(/4\./g, '').trim();
             } else {
-                // في حال عدم فصل الرمز يقوم بتقسيمه تلقائياً
                 document.getElementById('hw-step-1').innerText = `تم تحليل السؤال: ${query}`;
                 document.getElementById('hw-step-2').innerText = "المعطيات مستخرجة من نص السؤال المرفق.";
                 document.getElementById('hw-step-3').innerText = aiResponse;
@@ -484,7 +602,7 @@
         function closeAddTaskModal() { document.getElementById('add-task-modal').classList.add('hidden'); }
 
         function saveNewTask() {
-            const title = document.getElementById('new-task-title').value;
+            const title = document.getElementById('new-task-title').value.trim();
             const type = document.getElementById('new-task-type').value;
             const date = document.getElementById('new-task-date').value;
 
@@ -495,6 +613,9 @@
             renderTasks();
             closeAddTaskModal();
             document.getElementById('new-task-title').value = '';
+            
+            // فحص المهام مجدداً للتأكد ما إذا كانت المهمة المضافة اليوم
+            checkTaskDeadlines();
         }
 
         function toggleTask(i) { tasks[i].done = !tasks[i].done; localStorage.setItem('musaidati_tasks', JSON.stringify(tasks)); renderTasks(); }
@@ -503,7 +624,7 @@
         function filterTasks(type) {
             ['all', 'hw', 'exam', 'task'].forEach(id => {
                 const el = document.getElementById(`tab-${id}`);
-                el.className = 'flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-gray-400 task-tab';
+                if(el) el.className = 'flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-gray-400 task-tab';
             });
             event.target.className = 'flex-1 py-2 text-center text-xs font-bold border-b-2 border-app-blue text-blue-600 task-tab';
             renderTasks(type);
@@ -580,7 +701,7 @@
             }
         }
 
-        // --- 6. المساعد الذكي المباشر (Interactive AI Chat) ---
+        // --- 6. المساعد الذكي المباشر ---
         function toggleAiModal() {
             document.getElementById('ai-modal').classList.toggle('hidden');
         }
@@ -593,7 +714,6 @@
             const container = document.getElementById('ai-messages');
             const sendBtn = document.getElementById('ai-send-btn');
             
-            // إضافة رسالة الطالبة للواجهة
             const userMsg = document.createElement('div');
             userMsg.className = 'bg-app-purple text-white p-3 rounded-2xl rounded-tl-none max-w-[85%] self-end mr-auto leading-relaxed';
             userMsg.innerText = txt;
@@ -601,7 +721,6 @@
             input.value = '';
             container.scrollTop = container.scrollHeight;
 
-            // عنصر انتظار رد الذكاء الاصطناعي
             const loadingMsg = document.createElement('div');
             loadingMsg.className = 'bg-purple-50 text-purple-700 p-3 rounded-2xl rounded-tr-none max-w-[85%] leading-relaxed flex items-center space-x-2 space-x-reverse';
             loadingMsg.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin text-app-purple"></i><span>جاري التفكير وكتابة الرد...</span>';
@@ -610,10 +729,8 @@
 
             sendBtn.disabled = true;
 
-            // إرسال الطلب للسيرفر الفعلي
             const aiReply = await queryRealAI(txt, "أنت 'مساعدتي الذكي'، مساعد دراسي تفاعلي ولطيف جداً موجّه للطالبات. أجب على السؤال بدقة ووضوح وتقديم النصيحة الشاملة.");
 
-            // استبدال مؤشر التحميل بالرد النهائي الحقيقي
             container.removeChild(loadingMsg);
             const aiMsg = document.createElement('div');
             aiMsg.className = 'bg-purple-50 text-purple-900 p-3 rounded-2xl rounded-tr-none max-w-[85%] leading-relaxed whitespace-pre-line';

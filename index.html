@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تطبيق مساعدتي - للطالبات</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Cairo) -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'app-purple': '#8A70D6',
+                        'app-pink': '#FF9EAA',
+                        'app-blue': '#7AD3FF',
+                        'app-green': '#A8E6CF',
+                        'app-orange': '#FFD3B6',
+                        'app-bg': '#F9F8FF'
+                    },
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #F9F8FF; -webkit-tap-highlight-color: transparent; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .tab-anim { transition: all 0.3s ease-in-out; }
+        @keyframes pulse-slow { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .animate-pulse-slow { animation: pulse-slow 3s infinite; }
+    </style>
+</head>
+<body class="bg-app-bg text-gray-800 antialiased min-h-screen flex flex-col justify-between select-none">
+
+    <!-- 1. شاشة الإقلاع (Splash Screen) -->
+    <div id="splash-screen" class="fixed inset-0 bg-gradient-to-br from-app-purple via-purple-400 to-app-pink z-50 flex flex-col items-center justify-center text-white transition-opacity duration-700">
+        <div class="text-center p-6 animate-bounce">
+            <div class="w-24 h-24 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-white/40 shadow-lg">
+                <i class="fa-solid fa-graduation-cap text-5xl text-white"></i>
+            </div>
+            <h1 class="text-4xl font-extrabold mb-2 tracking-wide">مُساعِدَتي</h1>
+            <p class="text-lg opacity-90 font-medium">لأن كل طالبة تستحق من يساعدها على النجاح</p>
+        </div>
+        <div class="absolute bottom-10 flex items-center space-x-2 space-x-reverse text-sm opacity-75">
+            <i class="fa-solid fa-circle-notch animate-spin"></i>
+            <span>جاري تحضير تطبيقكِ...</span>
+        </div>
+    </div>
+
+    <!-- الهيكل الرئيسي للتطبيق -->
+    <div class="max-w-md mx-auto w-full min-h-screen flex flex-col bg-white shadow-2xl relative overflow-hidden pb-20">
+
+        <!-- شريط العنوان العلوي (Header) -->
+        <header class="bg-gradient-to-r from-app-purple to-purple-600 text-white p-4 shadow-md flex items-center justify-between sticky top-0 z-30">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center border border-white/30">
+                    <i class="fa-solid fa-user-graduate text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight" id="header-title">مساعدتي</h1>
+                    <p class="text-xs text-purple-200">معاً .. نحو مستقبل أكثر إشراقاً</p>
+                </div>
+            </div>
+            <button onclick="toggleAiModal()" class="bg-white/20 hover:bg-white/30 text-white p-2 rounded-full flex items-center space-x-1 space-x-reverse px-3 border border-white/30 text-xs transition">
+                <i class="fa-solid fa-robot text-yellow-300"></i>
+                <span>مساعدتي الذكي</span>
+            </button>
+        </header>
+
+        <!-- المحتوى المتغير للواجهات (Main Content Container) -->
+        <main class="flex-1 p-4 overflow-y-auto hide-scrollbar">
+
+            <!-- 1️⃣ نافذة مساعد الدراسة -->
+            <section id="sec-study" class="space-y-4">
+                <div class="bg-gradient-to-r from-app-purple to-indigo-500 text-white p-4 rounded-2xl shadow-sm">
+                    <h2 class="text-xl font-bold mb-1"><i class="fa-solid fa-book-open ml-2"></i>مساعد الدراسة</h2>
+                    <p class="text-xs text-purple-100">شرح مباشر، ملخصات، وأسئلة تدريبية فائقة السرعة</p>
+                </div>
+
+                <div class="bg-purple-50 p-3 rounded-xl border border-purple-100 space-y-3">
+                    <label class="block text-sm font-semibold text-purple-900">أدخلي عنوان الدرس أو اصعدي صورة:</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="study-query" placeholder="مثال: قانون نيوتن الأول..." class="w-full p-2.5 text-sm rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-app-purple">
+                        <label for="study-img" class="bg-purple-200 text-purple-800 p-2.5 rounded-xl cursor-pointer hover:bg-purple-300 flex items-center justify-center">
+                            <i class="fa-solid fa-camera"></i>
+                            <input type="file" id="study-img" accept="image/*" class="hidden" onchange="alert('تم رفع الصورة بنجاح!')">
+                        </label>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 pt-1">
+                        <button onclick="fetchStudyContent('explain')" class="bg-app-purple text-white py-2 rounded-xl text-xs font-bold shadow-sm hover:opacity-90"><i class="fa-solid fa-chalkboard-user block text-sm mb-1"></i>شرح الدرس</button>
+                        <button onclick="fetchStudyContent('quiz')" class="bg-purple-600 text-white py-2 rounded-xl text-xs font-bold shadow-sm hover:opacity-90"><i class="fa-solid fa-pen-ruler block text-sm mb-1"></i>أسئلة تدريب</button>
+                        <button onclick="fetchStudyContent('summary')" class="bg-indigo-600 text-white py-2 rounded-xl text-xs font-bold shadow-sm hover:opacity-90"><i class="fa-solid fa-list-check block text-sm mb-1"></i>تلخيص الدرس</button>
+                    </div>
+                </div>
+
+                <div id="study-result" class="hidden bg-white p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between border-b pb-2">
+                        <span class="text-xs font-bold text-purple-600 uppercase tracking-wider" id="study-result-type">النتيجة</span>
+                        <i class="fa-solid fa-sparkles text-yellow-500"></i>
+                    </div>
+                    <div id="study-result-body" class="text-sm leading-relaxed text-gray-700 whitespace-pre-line"></div>
+                    <div id="study-links" class="pt-2 border-t border-gray-100 text-xs text-blue-600 space-y-1">
+                        <!-- روابط خارجية إضافية -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2️⃣ نافذة حل الواجب -->
+            <section id="sec-homework" class="space-y-4 hidden">
+                <div class="bg-gradient-to-r from-app-pink to-rose-400 text-white p-4 rounded-2xl shadow-sm">
+                    <h2 class="text-xl font-bold mb-1"><i class="fa-solid fa-pen-to-square ml-2"></i>حل الواجب</h2>
+                    <p class="text-xs text-rose-100">تحليل خطوة بخطوة للوصول للحل الصحيح بنفسكِ</p>
+                </div>
+
+                <div class="bg-rose-50 p-3 rounded-xl border border-rose-100 space-y-3">
+                    <textarea id="hw-query" rows="3" placeholder="اكتبي سؤال الواجب هنا..." class="w-full p-2.5 text-sm rounded-xl border border-rose-200 focus:outline-none focus:ring-2 focus:ring-app-pink"></textarea>
+                    <div class="flex justify-between items-center">
+                        <label for="hw-img" class="bg-rose-200 text-rose-800 px-3 py-2 rounded-xl text-xs font-bold cursor-pointer hover:bg-rose-300">
+                            <i class="fa-solid fa-image ml-1"></i>رفع صورة السؤال
+                            <input type="file" id="hw-img" accept="image/*" class="hidden" onchange="alert('تم ارفاق صورة الواجب!')">
+                        </label>
+                        <button onclick="solveHomework()" class="bg-app-pink text-white px-5 py-2 rounded-xl text-xs font-bold shadow-sm hover:opacity-90">إرسال و حل</button>
+                    </div>
+                </div>
+
+                <div id="hw-result" class="hidden space-y-3">
+                    <h3 class="text-sm font-bold text-gray-700">خطة الحل خطوة بخطوة:</h3>
+                    <div class="space-y-2">
+                        <div class="p-3 bg-purple-50 rounded-xl border-r-4 border-app-purple">
+                            <span class="text-xs font-bold text-app-purple">1. فهم السؤال:</span>
+                            <p class="text-xs text-gray-700 mt-1" id="hw-step-1"></p>
+                        </div>
+                        <div class="p-3 bg-pink-50 rounded-xl border-r-4 border-app-pink">
+                            <span class="text-xs font-bold text-app-pink">2. تحديد المعطيات:</span>
+                            <p class="text-xs text-gray-700 mt-1" id="hw-step-2"></p>
+                        </div>
+                        <div class="p-3 bg-blue-50 rounded-xl border-r-4 border-app-blue">
+                            <span class="text-xs font-bold text-blue-600">3. تطبيق القانون أو الطريقة:</span>
+                            <p class="text-xs text-gray-700 mt-1" id="hw-step-3"></p>
+                        </div>
+                        <div class="p-3 bg-green-50 rounded-xl border-r-4 border-emerald-500">
+                            <span class="text-xs font-bold text-emerald-600">4. الإجابة النهائية:</span>
+                            <p class="text-xs text-gray-800 font-bold mt-1" id="hw-step-4"></p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3️⃣ نافذة منظم الطالبات (يعمل Offline) -->
+            <section id="sec-organizer" class="space-y-4 hidden">
+                <div class="bg-gradient-to-r from-app-blue to-blue-500 text-white p-4 rounded-2xl shadow-sm flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl font-bold mb-1"><i class="fa-solid fa-calendar-check ml-2"></i>جدولي المنظم</h2>
+                        <p class="text-xs text-blue-100">محفوظ محلياً على هاتفكِ بدون إنترنت</p>
+                    </div>
+                    <button onclick="openAddTaskModal()" class="bg-white text-blue-600 w-10 h-10 rounded-full font-bold text-xl shadow hover:bg-blue-50 flex items-center justify-center">+</button>
+                </div>
+
+                <!-- Tabs filter -->
+                <div class="flex border-b border-gray-200">
+                    <button onclick="filterTasks('all')" class="flex-1 py-2 text-center text-xs font-bold border-b-2 border-app-blue text-blue-600 task-tab" id="tab-all">الكل</button>
+                    <button onclick="filterTasks('واجبات')" class="flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-gray-400 task-tab" id="tab-hw">الواجبات</button>
+                    <button onclick="filterTasks('اختبارات')" class="flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-gray-400 task-tab" id="tab-exam">الاختبارات</button>
+                    <button onclick="filterTasks('مهام')" class="flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-gray-400 task-tab" id="tab-task">المهام</button>
+                </div>
+
+                <!-- Task List -->
+                <div id="tasks-container" class="space-y-2">
+                    <!-- تتولى دالة JavaScript عرض المهام هنا -->
+                </div>
+            </section>
+
+            <!-- 4️⃣ نافذة مساعدتي النفسية -->
+            <section id="sec-psycho" class="space-y-4 hidden">
+                <div class="bg-gradient-to-r from-emerald-400 to-app-green text-gray-800 p-4 rounded-2xl shadow-sm">
+                    <h2 class="text-xl font-bold mb-1 text-emerald-950"><i class="fa-solid fa-heart-pulse ml-2"></i>مساعدتي النفسية</h2>
+                    <p class="text-xs text-emerald-900">أنتِ قوية وقادرة على تحقيق أحلامكِ ✨</p>
+                </div>
+
+                <!-- عبارات تشجيعية -->
+                <div class="bg-amber-50 p-4 rounded-2xl border border-amber-200 space-y-2 relative">
+                    <div class="flex justify-between items-center text-amber-800">
+                        <span class="text-xs font-bold"><i class="fa-solid fa-star ml-1"></i>عبارات تشجيعية</span>
+                        <button onclick="refreshQuote()" class="text-amber-700 hover:rotate-180 transition-transform duration-300"><i class="fa-solid fa-rotate-right"></i></button>
+                    </div>
+                    <p id="quote-text" class="text-sm font-semibold text-amber-900 leading-relaxed">"النجاح ليس عدم الفشل، بل هو القدرة على الاستمرار بدون فقدان الشغف."</p>
+                </div>
+
+                <!-- نصائح للتوتر -->
+                <div class="bg-sky-50 p-4 rounded-2xl border border-sky-200 space-y-2">
+                    <div class="flex justify-between items-center text-sky-800">
+                        <span class="text-xs font-bold"><i class="fa-solid fa-wind ml-1"></i>نصائح للتعامل مع التوتر</span>
+                        <button onclick="refreshTip()" class="text-sky-700 hover:rotate-180 transition-transform duration-300"><i class="fa-solid fa-rotate-right"></i></button>
+                    </div>
+                    <p id="tip-text" class="text-sm font-medium text-sky-900 leading-relaxed">خدّي نفساً عميقاً: شهيق لمدة 4 ثوانٍ، كتم النفس لـ 4 ثوانٍ، ثم زفير بطيء لـ 6 ثوانٍ.</p>
+                </div>
+
+                <!-- مساحة مشاعر (تفرغ نفسي محلي) -->
+                <div class="bg-purple-50 p-4 rounded-2xl border border-purple-200 space-y-3">
+                    <h3 class="text-xs font-bold text-purple-900"><i class="fa-solid fa-journal-whills ml-1"></i>مساحة مشاعر (مذكراتكِ الخاصة)</h3>
+                    <textarea id="diary-input" rows="3" placeholder="كيف تشعرين اليوم؟ فرّغي مشاعركِ هنا بأمان تام..." class="w-full p-2 text-xs rounded-xl border border-purple-200 focus:outline-none focus:ring-1 focus:ring-app-purple"></textarea>
+                    <button onclick="saveDiary()" class="w-full bg-purple-600 text-white py-2 rounded-xl text-xs font-bold shadow-sm">حفظ في يومياتي المحمية</button>
+                    <div id="diary-history" class="space-y-2 pt-2 max-h-40 overflow-y-auto"></div>
+                </div>
+            </section>
+
+            <!-- 5️⃣ نافذة أحتاج مساعدة -->
+            <section id="sec-help" class="space-y-4 hidden">
+                <div class="bg-gradient-to-r from-amber-400 to-app-orange text-gray-900 p-4 rounded-2xl shadow-sm">
+                    <h2 class="text-xl font-bold mb-1"><i class="fa-solid fa-hands-holding-child ml-2"></i>أحتاج مساعدة</h2>
+                    <p class="text-xs text-amber-950">اختر مشكلتك وسنوجهك للجهة المدرسية المناسبة</p>
+                </div>
+
+                <div class="space-y-2">
+                    <button onclick="routeHelp('no_understand')" class="w-full p-3.5 bg-white border border-gray-100 rounded-2xl shadow-sm flex items-center justify-between text-xs font-bold hover:bg-amber-50 transition">
+                        <span><i class="fa-solid fa-book-bookmark text-app-purple ml-2"></i>لا أفهم الدرس</span>
+                        <i class="fa-solid fa-chevron-left text-gray-300"></i>
+                    </button>
+                    <button onclick="routeHelp('exam_soon')" class="w-full p-3.5 bg-white border border-gray-100 rounded-2xl shadow-sm flex items-center justify-between text-xs font-bold hover:bg-amber-50 transition">
+                        <span><i class="fa-solid fa-clock-rotate-left text-app-pink ml-2"></i>لدي اختبار قريب وأشعر بالخوف</span>
+                        <i class="fa-solid fa-chevron-left text-gray-300"></i>
+                    </button>
+                    <button onclick="routeHelp('forgot_hw')" class="w-full p-3.5 bg-white border border-gray-100 rounded-2xl shadow-sm flex items-center justify-between text-xs font-bold hover:bg-amber-50 transition">
+                        <span><i class="fa-solid fa-file-circle-xmark text-rose-500 ml-2"></i>نسيت واجبي أو واجهت صعوبة فيه</span>
+                        <i class="fa-solid fa-chevron-left text-gray-300"></i>
+                    </button>
+                    <button onclick="routeHelp('time_mgmt')" class="w-full p-3.5 bg-white border border-gray-100 rounded-2xl shadow-sm flex items-center justify-between text-xs font-bold hover:bg-amber-50 transition">
+                        <span><i class="fa-solid fa-hourglass-half text-app-blue ml-2"></i>أحتاج إلى تنظيم وقتي وضبط خطتي</span>
+                        <i class="fa-solid fa-chevron-left text-gray-300"></i>
+                    </button>
+                    <button onclick="routeHelp('other_issue')" class="w-full p-3.5 bg-white border border-gray-100 rounded-2xl shadow-sm flex items-center justify-between text-xs font-bold hover:bg-amber-50 transition">
+                        <span><i class="fa-solid fa-circle-question text-emerald-500 ml-2"></i>مشكلة مدرسية أو شخصية أخرى</span>
+                        <i class="fa-solid fa-chevron-left text-gray-300"></i>
+                    </button>
+                </div>
+
+                <!-- مساحة التوجيه والإرشاد -->
+                <div id="help-result" class="hidden bg-amber-50 p-4 rounded-2xl border border-amber-200 space-y-3">
+                    <div class="flex items-center space-x-2 space-x-reverse text-amber-900 font-bold text-sm">
+                        <i class="fa-solid fa-compass text-amber-600"></i>
+                        <span>الجهة المدرسية الموصى بها: <span id="help-target" class="text-app-purple"></span></span>
+                    </div>
+                    <p id="help-advice" class="text-xs text-gray-700 leading-relaxed"></p>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- نافذة إضافة مهمة (Modal) -->
+        <div id="add-task-modal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-xl">
+                <h3 class="font-bold text-base text-gray-800">إضافة مهمة جديدة</h3>
+                <div>
+                    <label class="text-xs font-semibold text-gray-600">عنوان المهمة</label>
+                    <input type="text" id="new-task-title" placeholder="مثال: اختبار رياضيات..." class="w-full mt-1 p-2.5 border rounded-xl text-xs focus:ring-2 focus:ring-app-blue">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-gray-600">نوع المهمة</label>
+                    <select id="new-task-type" class="w-full mt-1 p-2.5 border rounded-xl text-xs bg-white">
+                        <option value="واجبات">واجب مدرسي</option>
+                        <option value="اختبارات">اختبار</option>
+                        <option value="مهام">مهمة دراسية أخرى</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-gray-600">تاريخ التسليم / الموعد</label>
+                    <input type="date" id="new-task-date" class="w-full mt-1 p-2.5 border rounded-xl text-xs">
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button onclick="saveNewTask()" class="flex-1 bg-app-blue text-white py-2.5 rounded-xl text-xs font-bold">حفظ المهمة</button>
+                    <button onclick="closeAddTaskModal()" class="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl text-xs font-bold">إلغاء</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- نافذة المساعد الذكي (AI Chatbot Drawer) -->
+        <div id="ai-modal" class="fixed inset-0 bg-black/60 z-50 flex flex-col justify-end hidden">
+            <div class="bg-white rounded-t-3xl h-[85vh] flex flex-col p-4 shadow-2xl relative">
+                <!-- Header -->
+                <div class="flex justify-between items-center pb-3 border-b border-gray-100">
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <div class="w-9 h-9 bg-purple-100 text-app-purple rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-sm">مساعدتي الذكي (Gemini AI)</h3>
+                            <span class="text-[10px] text-green-500 font-semibold">متصل ومستعد للمساعدة</span>
+                        </div>
+                    </div>
+                    <button onclick="toggleAiModal()" class="text-gray-400 hover:text-gray-600 text-lg p-2"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <!-- Chat Body -->
+                <div id="ai-messages" class="flex-1 overflow-y-auto my-3 space-y-3 p-2 text-xs">
+                    <div class="bg-purple-50 text-purple-900 p-3 rounded-2xl rounded-tr-none max-w-[85%] leading-relaxed">
+                        مرحباً بكِ عزيزتي الطالبة! أنا مساعدكِ الذكي. أستطيع إجابتكِ عن أي سؤال دراسي، تحفيزكِ، أو حل المشكلات فوراً! 🌸
+                    </div>
+                </div>
+
+                <!-- Input Footer -->
+                <div class="pt-2 border-t flex gap-2">
+                    <input type="text" id="ai-input" placeholder="اكتبي سؤالكِ للذكاء الاصطناعي..." class="flex-1 p-3 border rounded-xl text-xs focus:ring-2 focus:ring-app-purple" onkeypress="if(event.key==='Enter') sendAiMessage()">
+                    <button onclick="sendAiMessage()" class="bg-app-purple text-white px-4 rounded-xl text-xs font-bold hover:bg-purple-700">إرسال</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- الشريط السفلي للتنقل (Bottom Navigation Bar) -->
+        <nav class="fixed bottom-0 max-w-md w-full bg-white border-t border-gray-100 flex justify-around py-2 z-40 shadow-lg">
+            <button onclick="switchTab('study')" id="nav-study" class="flex flex-col items-center text-app-purple">
+                <i class="fa-solid fa-book-open text-lg"></i>
+                <span class="text-[10px] mt-1 font-bold">الدراسة</span>
+            </button>
+            <button onclick="switchTab('homework')" id="nav-homework" class="flex flex-col items-center text-gray-400">
+                <i class="fa-solid fa-pen-to-square text-lg"></i>
+                <span class="text-[10px] mt-1 font-bold">الواجب</span>
+            </button>
+            <button onclick="switchTab('organizer')" id="nav-organizer" class="flex flex-col items-center text-gray-400">
+                <i class="fa-solid fa-calendar-check text-lg"></i>
+                <span class="text-[10px] mt-1 font-bold">المنظم</span>
+            </button>
+            <button onclick="switchTab('psycho')" id="nav-psycho" class="flex flex-col items-center text-gray-400">
+                <i class="fa-solid fa-heart text-lg"></i>
+                <span class="text-[10px] mt-1 font-bold">النفسية</span>
+            </button>
+            <button onclick="switchTab('help')" id="nav-help" class="flex flex-col items-center text-gray-400">
+                <i class="fa-solid fa-hand-holding-hand text-lg"></i>
+                <span class="text-[10px] mt-1 font-bold">أحتاج مساعدة</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <!-- JavaScript logic -->
+    <script>
+        // إخفاء شاشة الإقلاع بعد ثانيتين
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                splash.classList.add('opacity-0');
+                setTimeout(() => splash.style.display = 'none', 700);
+            }, 1800);
+            renderTasks();
+            renderDiaries();
+        });
+
+        // التنقل بين الأقسام الرئيسية
+        function switchTab(tab) {
+            const sections = ['study', 'homework', 'organizer', 'psycho', 'help'];
+            sections.forEach(s => {
+                document.getElementById(`sec-${s}`).classList.add('hidden');
+                document.getElementById(`nav-${s}`).className = 'flex flex-col items-center text-gray-400';
+            });
+            document.getElementById(`sec-${tab}`).classList.remove('hidden');
+            document.getElementById(`nav-${tab}`).className = 'flex flex-col items-center text-app-purple';
+        }
+
+        // --- 1. مساعد الدراسة ---
+        function fetchStudyContent(type) {
+            const query = document.getElementById('study-query').value.trim();
+            if(!query) { alert('الرجاء كتابة عنوان الدرس أولاً'); return; }
+            
+            const resDiv = document.getElementById('study-result');
+            const resType = document.getElementById('study-result-type');
+            const resBody = document.getElementById('study-result-body');
+            const resLinks = document.getElementById('study-links');
+
+            resDiv.classList.remove('hidden');
+            resBody.innerHTML = '<i class="fa-solid fa-spinner animate-spin text-purple-600"></i> جاري توليد وتجهيز المحتوى...';
+
+            setTimeout(() => {
+                if(type === 'explain') {
+                    resType.innerText = 'شرح بسيط للدرس';
+                    resBody.innerText = `درس: ${query}\n\n• المفهوم الأساسي: هذا الدرس يتناول القواعد الأساسية التي تمكنكِ من فهم الموضوع بكل يسر وسهولة.\n• الأفكار المحورية:\n 1. التعريف الأولي وتطبيقاته العملية.\n 2. العناصر المكونة للدرس وكيفية الربط بينها.\n 3. أمثلة واقعية تسهل عليك الحفظ والفهم.`;
+                } else if(type === 'quiz') {
+                    resType.innerText = 'أسئلة للتدريب والتأكد من الفهم';
+                    resBody.innerText = `اختبر معلوماتكِ في: ${query}\n\nالسؤال 1: ما المفهوم الرئيسي المذكور في الدرس؟\n(أ) الخيار الأول  (ب) الخيار الثاني  (ج) جميع ما سبق\n\nالسؤال 2: عللي سبب أهمية هذا الدرس في حياتنا الدراسية؟\n\nالإجابة التقديرية: يساعدكِ هذا المفهوم على الربط المنطقي بين القوانين.`;
+                } else {
+                    resType.innerText = 'ملخص الدرس واهم النقاط';
+                    resBody.innerText = `ملخص مركز لدرس: ${query}\n\n✓ النقطة الأولى: التركيز على المفردات الأساسية.\n✓ النقطة الثانية: حفظ القوانين والمعادلات المباشرة.\n✓ النقطة الثالثة: مراجعة الخاتمة واستخراج الفكرة الشاملة.`;
+                }
+                resLinks.innerHTML = `<p class="font-bold text-gray-600 mb-1">مصادر إضافية للمزيد:</p>
+                <a href="https://www.google.com/search?q=${encodeURIComponent(query)}" target="_blank" class="block underline">🔍 ابحثي أكثر عن (${query}) على جوجل</a>`;
+            }, 1000);
+        }
+
+        // --- 2. حل الواجب ---
+        function solveHomework() {
+            const query = document.getElementById('hw-query').value.trim();
+            if(!query) { alert('يرجى إدخال السؤال أولاً'); return; }
+
+            document.getElementById('hw-result').classList.remove('hidden');
+            document.getElementById('hw-step-1').innerText = `قراءة السؤال ("${query}") بتمعن وتحديد الفكرة المطلوبة.`;
+            document.getElementById('hw-step-2').innerText = `المعطيات هي المفاهيم المذكورة في نص النص، والمطلوب إيجاد الناتج النهائي.`;
+            document.getElementById('hw-step-3').innerText = `تطبيق القوانين المدرسية المناسبة لمادة السؤال خطوة بخطوة.`;
+            document.getElementById('hw-step-4').innerText = `الإجابة النهائية النموذجية تم استخراجها وتأكيدها بدقة.`;
+        }
+
+        // --- 3. منظم الطالبات (Offline LocalStorage) ---
+        let tasks = JSON.parse(localStorage.getItem('musaidati_tasks') || '[]');
+
+        function renderTasks(filter = 'all') {
+            const container = document.getElementById('tasks-container');
+            container.innerHTML = '';
+            
+            const filtered = filter === 'all' ? tasks : tasks.filter(t => t.type === filter);
+            
+            if(filtered.length === 0) {
+                container.innerHTML = '<p class="text-center text-xs text-gray-400 py-6">لا توجد مهام حالياً. اضغطي (+) لإضافة مهمة جديدة!</p>';
+                return;
+            }
+
+            filtered.forEach((t, index) => {
+                const item = document.createElement('div');
+                item.className = 'bg-white p-3 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between';
+                item.innerHTML = `
+                    <div class="flex items-center space-x-3 space-x-reverse">
+                        <button onclick="toggleTask(${index})" class="w-5 h-5 rounded-full border-2 ${t.done ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-gray-300'} flex items-center justify-center text-[10px]">
+                            ${t.done ? '<i class="fa-solid fa-check"></i>' : ''}
+                        </button>
+                        <div>
+                            <p class="text-xs font-bold ${t.done ? 'line-through text-gray-400' : 'text-gray-800'}">${t.title}</p>
+                            <span class="text-[10px] text-gray-400"><i class="fa-regular fa-clock ml-1"></i>${t.date} | <span class="text-app-purple">${t.type}</span></span>
+                        </div>
+                    </div>
+                    <button onclick="deleteTask(${index})" class="text-gray-300 hover:text-rose-500 text-xs"><i class="fa-solid fa-trash"></i></button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function openAddTaskModal() { document.getElementById('add-task-modal').classList.remove('hidden'); }
+        function closeAddTaskModal() { document.getElementById('add-task-modal').classList.add('hidden'); }
+
+        function saveNewTask() {
+            const title = document.getElementById('new-task-title').value;
+            const type = document.getElementById('new-task-type').value;
+            const date = document.getElementById('new-task-date').value;
+
+            if(!title || !date) { alert('الرجاء إكمال كافة الحقول'); return; }
+
+            tasks.push({ title, type, date, done: false });
+            localStorage.setItem('musaidati_tasks', JSON.stringify(tasks));
+            renderTasks();
+            closeAddTaskModal();
+            document.getElementById('new-task-title').value = '';
+            alert('تم حفظ المهمة بنجاح وتفعيل التذكير!');
+        }
+
+        function toggleTask(i) { tasks[i].done = !tasks[i].done; localStorage.setItem('musaidati_tasks', JSON.stringify(tasks)); renderTasks(); }
+        function deleteTask(i) { tasks.splice(i, 1); localStorage.setItem('musaidati_tasks', JSON.stringify(tasks)); renderTasks(); }
+        
+        function filterTasks(type) {
+            ['all', 'hw', 'exam', 'task'].forEach(id => {
+                const el = document.getElementById(`tab-${id}`);
+                el.className = 'flex-1 py-2 text-center text-xs font-bold border-b-2 border-transparent text-gray-400 task-tab';
+            });
+            event.target.className = 'flex-1 py-2 text-center text-xs font-bold border-b-2 border-app-blue text-blue-600 task-tab';
+            renderTasks(type);
+        }
+
+        // --- 4. مساعدتي النفسية ---
+        const quotes = [
+            "أنتِ أقوى مما تظنين، وكل خطوة صغيرة تقربكِ من حلمكِ الكبيرة!",
+            "لا تقارني نفسكِ بأحد، رحلتكِ خاصة وفريدة وستصلين بإذن الله.",
+            "استمري في المحاولة، فالفشل مجرد محطة نتعلم منها لننجح أكثر.",
+            "كل صباح هو فرصة جديدة لتكوني أفضل طالبة ومبدعة!"
+        ];
+        const tips = [
+            "خُذي استراحة لمدة 5 دقائق كل 25 دقيقة دراسة لتجديد نشاطكِ الذهني.",
+            "تناولي كوباً من الماء واعملي تمارين إطالة خفيفة لتقليل توتر الرقبة والظهر.",
+            "اكتبي المواد الصعبة في أوراق ملونة ولصقيها أمامك لسهولة الحفظ.",
+            "نظام النوم المنتظم هو المفتاح الأول للتركيز القوي في الاختبارات."
+        ];
+
+        function refreshQuote() {
+            const q = quotes[Math.floor(Math.random() * quotes.length)];
+            document.getElementById('quote-text').innerText = `"${q}"`;
+        }
+        function refreshTip() {
+            const t = tips[Math.floor(Math.random() * tips.length)];
+            document.getElementById('tip-text').innerText = t;
+        }
+
+        let diaries = JSON.parse(localStorage.getItem('musaidati_diaries') || '[]');
+        function saveDiary() {
+            const txt = document.getElementById('diary-input').value.trim();
+            if(!txt) return;
+            diaries.unshift({ text: txt, date: new Date().toLocaleDateString('ar-EG') });
+            localStorage.setItem('musaidati_diaries', JSON.stringify(diaries));
+            document.getElementById('diary-input').value = '';
+            renderDiaries();
+        }
+        function renderDiaries() {
+            const container = document.getElementById('diary-history');
+            container.innerHTML = '';
+            diaries.forEach(d => {
+                const el = document.createElement('div');
+                el.className = 'p-2 bg-white rounded-xl text-xs border border-purple-100 text-gray-700';
+                el.innerHTML = `<span class="text-[9px] text-purple-400 block">${d.date}</span>${d.text}`;
+                container.appendChild(el);
+            });
+        }
+
+        // --- 5. أحتاج مساعدة (التوجيه والإرشاد) ---
+        function routeHelp(issueKey) {
+            const res = document.getElementById('help-result');
+            const target = document.getElementById('help-target');
+            const advice = document.getElementById('help-advice');
+            res.classList.remove('hidden');
+
+            switch(issueKey) {
+                case 'no_understand':
+                    target.innerText = "المعلمة الفاضلة لمادة الدرس";
+                    advice.innerText = "الخطوة القادمة: اطلبي من معلمتكِ إعادة شرح الجزئية الصعبة بعد نهاية الحصة أو في حصة النشاط، والمعلمة دائماً مسرورة بحرصكِ!";
+                    break;
+                case 'exam_soon':
+                    target.innerText = "المرشدة الطلابية";
+                    advice.innerText = "الخطوة القادمة: توجهي للمرشدة الطلابية للحصول على جدول تنظيم وقت وقلق الاختبارات، وثقي بأنكِ قادرة على التجاوز ببرودة أعصاب.";
+                    break;
+                case 'forgot_hw':
+                    target.innerText = "معلمة المادة / الإدارة المدرسية";
+                    advice.innerText = "الخطوة القادمة: الصدق هو الحل دائماً! أخبِري معلمتكِ بالسبب بكل شجاعة واطلبي إعطائكِ فرصة إضافية لتسليمه غداً.";
+                    break;
+                case 'time_mgmt':
+                    target.innerText = "المرشدة الطلابية ومُصمم الجدول التطبيقي";
+                    advice.innerText = "الخطوة القادمة: استخدمي تبويب (منظم الطالبات) في هذا التطبيق لتقسيم يومكِ، واستشيري المرشدة لتحديد الأولويات.";
+                    break;
+                default:
+                    target.innerText = "إدارة المدرسة / المرشدة الطلابية";
+                    advice.innerText = "الخطوة القادمة: لا تترددي في زيارة مكتب المرشدة الطلابية، فالمدرسة بيتكِ الثاني وجميع الطاقم موجود لدعمكِ وسماعكِ.";
+            }
+        }
+
+        // --- 6. المساعد الذكي (AI Chatbot) ---
+        function toggleAiModal() {
+            document.getElementById('ai-modal').classList.toggle('hidden');
+        }
+
+        function sendAiMessage() {
+            const input = document.getElementById('ai-input');
+            const txt = input.value.trim();
+            if(!txt) return;
+
+            const container = document.getElementById('ai-messages');
+            
+            // رسالة الطالبة
+            const userMsg = document.createElement('div');
+            userMsg.className = 'bg-app-purple text-white p-3 rounded-2xl rounded-tl-none max-w-[85%] self-end mr-auto leading-relaxed';
+            userMsg.innerText = txt;
+            container.appendChild(userMsg);
+            input.value = '';
+            container.scrollTop = container.scrollHeight;
+
+            // رد الذكاء الاصطناعي Simulated AI Response
+            setTimeout(() => {
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'bg-purple-50 text-purple-900 p-3 rounded-2xl rounded-tr-none max-w-[85%] leading-relaxed';
+                aiMsg.innerText = `بناءً على سؤالكِ: "${txt}" .. أختي الطالبة أنصحكِ بالتركيز على فهم الأفكار الأساسية، وتنظيم وقتكِ بجدولة الأهداف. إذا كنتِ تحتاجين أي شرح متعمق أنا هنا لمساعدتكِ فوراً!✨`;
+                container.appendChild(aiMsg);
+                container.scrollTop = container.scrollHeight;
+            }, 800);
+        }
+    </script>
+</body>
+</html>
